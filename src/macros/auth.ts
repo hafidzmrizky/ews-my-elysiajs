@@ -11,9 +11,9 @@ export const identityMacro = new Elysia()
         auth: {
             schema: { AuthHeaderSchema },
             async resolve({ headers, status, store: { ip } }) {
-                const { appType, api_key } = headers;
+                const { appType, apiKey } = headers;
 
-                if (api_key && api_key === process.env.OVERRIDE_API_KEY) {
+                if (apiKey && apiKey === process.env.OVERRIDE_API_KEY) {
                     return {
                         user_type: "admin"
                     }
