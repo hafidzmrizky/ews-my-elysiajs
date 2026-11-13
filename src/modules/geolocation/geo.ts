@@ -316,6 +316,46 @@ export function getDistrictsByState(stateCode: string): string[] {
     return districtsByState[norm] ? [...districtsByState[norm]] : [];
 }
 
+export interface DistrictDetail {
+    name: string;
+    slug: string;
+    centroid: { lat: number; lng: number };
+}
+
+/**
+ * get districts with centroid coordinates for a state
+ */
+export function getDistrictDetailsByState(stateCode: string): DistrictDetail[] {
+    const norm = stateCode.toUpperCase();
+    return indexedDistricts
+        .filter((d) => d.state_code === norm)
+        .map((d) => ({
+            name: d.name,
+            slug: d.slug,
+            centroid: { lat: d.centroid[1], lng: d.centroid[0] },
+        }));
+}
+
+/**
+ * get the centroid coordinates of a state (average of all district centroids)
+ */
+export function getStateCoordinates(stateCode: string): { lat: number; lng: number } | null {
+    const norm = stateCode.toUpperCase();
+    const districts = indexedDistricts.filter((d) => d.state_code === norm);
+    if (districts.length === 0) return null;
+
+    let sumLat = 0;
+    let sumLng = 0;
+    for (const d of districts) {
+        sumLat += d.centroid[1];
+        sumLng += d.centroid[0];
+    }
+    return {
+        lat: Math.round((sumLat / districts.length) * 10000) / 10000,
+        lng: Math.round((sumLng / districts.length) * 10000) / 10000,
+    };
+}
+
 /**
  * normalize a district name against the known districts for a state
  */

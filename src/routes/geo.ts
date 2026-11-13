@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { findDistrictByCoordinates, getDistrictsByState, MALAYSIA_STATES } from "../modules/geolocation";
+import { findDistrictByCoordinates, getDistrictsByState, getDistrictDetailsByState, getStateCoordinates, MALAYSIA_STATES } from "../modules/geolocation";
 import { geoQuery } from "../models/geo";
 
 export const geoRoutes = new Elysia({ prefix: "/geo" });
@@ -47,3 +47,51 @@ geoRoutes.get("/states", async ({ status }) => {
         description: "List all Malaysian states and their respective districts",
     },
 })
+geoRoutes.get("/states/:code/coordinates", async ({ params: { code }, status, query }) => {
+    const queryDistrict = query.district;
+
+    const state = Object.values(MALAYSIA_STATES).find((s) => s.code === code.toUpperCase());
+    if (!state) {
+        return status(404, {
+            success: false,
+            error: "STATE_NOT_FOUND",
+            message: `State with code ${code} not found`,
+        });
+    }
+
+    const districtDetails = getDistrictDetailsByState(state.code);
+
+    if (queryDistrict) {
+        const district = districtDetails.find((d) => d.name.toLowerCase() === queryDistrict.toLowerCase());
+        if (!district) {
+            return status(404, {
+                success: false,
+                error: "DISTRICT_NOT_FOUND",
+                message: `District ${queryDistrict} not found in state ${state.name}`,
+            });
+        }
+        return status(200, {
+            success: true,
+            state: state.name,
+            district: district.name,
+            coordinates: district.centroid,
+        });
+    }
+
+    const coordinates = getStateCoordinates(state.code);
+    return status(200, {
+        success: true,
+        state: state.name,
+        district: null,
+        coordinates,
+    });
+}, {
+    query: t.Object({
+        district: t.Optional(t.String()),
+    }),
+    detail: {
+        tags: ["Geographic"],
+        summary: "Get State/District Coordinates",
+        description: "Get the epicentrum (centroid) coordinates of a Malaysian state or district by state code",
+    },
+});
