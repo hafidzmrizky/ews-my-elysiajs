@@ -3,6 +3,8 @@ export * from "./const";
 export {
     findDistrictByCoordinates,
     getDistrictsByState,
+    getDistrictDetailsByState,
+    getStateCoordinates,
     normalizeDistrictName,
     resolveStateCode,
     haversineDistanceKm,
@@ -10,3 +12,4 @@ export {
     isWithinMalaysiaBounds,
     initializeGeo,
 } from "./geo";
+export type { DistrictDetail } from "./geo";
